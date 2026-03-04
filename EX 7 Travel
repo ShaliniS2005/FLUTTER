@@ -1,0 +1,309 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(TravelGuideApp());
+}
+
+class TravelGuideApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: "Travel Guide",
+      theme: ThemeData(fontFamily: 'Arial'),
+      home: HomeScreen(),
+    );
+  }
+}
+
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+
+  List<Map<String, String>> favoritePlaces = [];
+
+  final List<Map<String, String>> allPlaces = [
+    {"name": "Paris", "country": "France"},
+    {"name": "London", "country": "UK"},
+    {"name": "New York", "country": "USA"},
+    {"name": "Tokyo", "country": "Japan"},
+  ];
+
+  void toggleFavorite(Map<String, String> place) {
+    setState(() {
+      if (favoritePlaces.contains(place)) {
+        favoritePlaces.remove(place);
+      } else {
+        favoritePlaces.add(place);
+      }
+    });
+  }
+
+  void _selectPage(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      HomePage(),
+      PlacesPage(
+        places: allPlaces,
+        favorites: favoritePlaces,
+        onFavoriteToggle: toggleFavorite,
+      ),
+      FavoritesPage(favorites: favoritePlaces),
+      ProfilePage(),
+    ];
+
+    return Scaffold(
+      appBar: CustomAppBar(),
+      drawer: CustomDrawer(onItemTap: _selectPage),
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        selectedItemColor: Colors.teal,
+        unselectedItemColor: Colors.grey,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.place), label: "Places"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.favorite), label: "Favorites"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person), label: "Profile"),
+        ],
+      ),
+    );
+  }
+}
+
+//////////////////////////////////////////////////
+// Custom App Bar
+//////////////////////////////////////////////////
+
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text("Travel Guide"),
+      centerTitle: true,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.teal, Colors.blueAccent],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+}
+
+//////////////////////////////////////////////////
+// Drawer
+//////////////////////////////////////////////////
+
+class CustomDrawer extends StatelessWidget {
+  final Function(int) onItemTap;
+
+  CustomDrawer({required this.onItemTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(20),
+            color: Colors.teal,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.flight_takeoff,
+                    size: 50, color: Colors.white),
+                SizedBox(height: 10),
+                Text("Explore the World",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.home),
+            title: Text("Home"),
+            onTap: () => onItemTap(0),
+          ),
+          ListTile(
+            leading: Icon(Icons.place),
+            title: Text("Places"),
+            onTap: () => onItemTap(1),
+          ),
+          ListTile(
+            leading: Icon(Icons.favorite),
+            title: Text("Favorites"),
+            onTap: () => onItemTap(2),
+          ),
+          ListTile(
+            leading: Icon(Icons.person),
+            title: Text("Profile"),
+            onTap: () => onItemTap(3),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//////////////////////////////////////////////////
+// Home Page
+//////////////////////////////////////////////////
+
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        "Welcome to Travel World 🌍",
+        style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.teal),
+      ),
+    );
+  }
+}
+
+//////////////////////////////////////////////////
+// Places Page
+//////////////////////////////////////////////////
+
+class PlacesPage extends StatelessWidget {
+  final List<Map<String, String>> places;
+  final List<Map<String, String>> favorites;
+  final Function(Map<String, String>) onFavoriteToggle;
+
+  PlacesPage(
+      {required this.places,
+      required this.favorites,
+      required this.onFavoriteToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: EdgeInsets.all(10),
+      itemCount: places.length,
+      itemBuilder: (context, index) {
+        final place = places[index];
+        final isFavorite = favorites.contains(place);
+
+        return Card(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15)),
+          elevation: 5,
+          margin: EdgeInsets.only(bottom: 15),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.teal,
+              child: Icon(Icons.location_on,
+                  color: Colors.white),
+            ),
+            title: Text(place["name"]!,
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(place["country"]!),
+            trailing: IconButton(
+              icon: Icon(
+                isFavorite
+                    ? Icons.favorite
+                    : Icons.favorite_border,
+                color: Colors.red,
+              ),
+              onPressed: () => onFavoriteToggle(place),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+//////////////////////////////////////////////////
+// Favorites Page
+//////////////////////////////////////////////////
+
+class FavoritesPage extends StatelessWidget {
+  final List<Map<String, String>> favorites;
+
+  FavoritesPage({required this.favorites});
+
+  @override
+  Widget build(BuildContext context) {
+    if (favorites.isEmpty) {
+      return Center(
+        child: Text("No Favorites Added ❤️"),
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.all(10),
+      itemCount: favorites.length,
+      itemBuilder: (context, index) {
+        return Card(
+          child: ListTile(
+            leading: Icon(Icons.favorite, color: Colors.red),
+            title: Text(favorites[index]["name"]!),
+            subtitle: Text(favorites[index]["country"]!),
+          ),
+        );
+      },
+    );
+  }
+}
+
+//////////////////////////////////////////////////
+// Profile Page
+//////////////////////////////////////////////////
+
+class ProfilePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: Colors.teal,
+            child: Icon(Icons.person,
+                size: 50, color: Colors.white),
+          ),
+          SizedBox(height: 10),
+          Text("Deepthi Mable",
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold)),
+          Text("travel@email.com",
+              style: TextStyle(color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+}
